@@ -1,6 +1,6 @@
 # Shogi Piece Detection with YOLO
 
-![Shogi Detection Example](./assets/yolo_detection_example.png)
+![Shogi Detection Results](./assets/detection_results.png)
 
 ## Overview
 This project implements Shogi piece detection using a YOLO (You Only Look Once) object detection model. It enables automatic recognition of Shogi pieces from images or video, which can be used for game digitization, analysis, or computer vision applications related to Japanese chess.
@@ -64,10 +64,6 @@ This will train a YOLO model with the following configuration:
 - FP16 precision
 
 Training progress and results will be saved to the `output` directory.
-
-## Example Results
-
-![Shogi Detection Results](./assets/detection_results.png)
 
 ## Memory Optimization
 The training script includes memory optimization techniques:
