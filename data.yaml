@@ -1,0 +1,11 @@
+path: ..
+
+train: train/images
+val: valid/images
+test: test/images
+
+names: 
+  0: A
+  1: B
+  2: C
+  3: D
