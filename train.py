@@ -18,7 +18,7 @@ train_path = os.path.join(root_dir, 'train', 'images')
 valid_path = os.path.join(root_dir, 'valid', 'images')
 
 if __name__ == '__main__':
-    model = YOLO('yolo11n.pt')
+    model = YOLO('yolo11s.pt')
     results = model.train(
         device=0,
         data=yaml_dir,
