@@ -30,7 +30,6 @@ if __name__ == '__main__':
     # Clear cache before training
     torch.cuda.empty_cache()
     gc.collect()
-    
     results = model.train(
         device=0,
         data=yaml_dir,
