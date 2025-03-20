@@ -6,6 +6,14 @@ import gc
 print(os.getcwd())
 print(ultralytics.__version__)
 
+# Check if CUDA is available
+print(f"CUDA available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"CUDA device count: {torch.cuda.device_count()}")
+    print(f"CUDA device name: {torch.cuda.get_device_name(0)}")
+else:
+    print("WARNING: CUDA is not available. Training will use CPU, which will be much slower.")
+
 # The most aggressive memory management possible
 torch.cuda.empty_cache()
 gc.collect()  # Force garbage collection
@@ -27,11 +35,15 @@ if __name__ == '__main__':
     # Use a larger model for better accuracy (if memory allows)
     model = YOLO('yolov8m.pt')  # Using medium-sized model for better accuracy
     
+    # Set device
+    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    print(f"Using device: {device}")
+    
     # Clear cache before training
     torch.cuda.empty_cache()
     gc.collect()
     results = model.train(
-        device=0,
+        device=device,
         data=yaml_dir,
         epochs=300,  # Increased epochs for better convergence
         batch=16,  # Smaller batch size to accommodate larger model
