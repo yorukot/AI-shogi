@@ -25,7 +25,7 @@ valid_path = os.path.join(root_dir, 'valid', 'images')
 
 if __name__ == '__main__':
     # Use smallest available model
-    model = YOLO('yolov11s.pt')  # Switch to the smallest YOLOv8 nano model
+    model = YOLO('yolo11s.pt')  # Switch to the smallest YOLOv8 nano model
     
     # Clear cache before training
     torch.cuda.empty_cache()
