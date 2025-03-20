@@ -11,18 +11,22 @@ print(f"CUDA available: {torch.cuda.is_available()}")
 if torch.cuda.is_available():
     print(f"CUDA device count: {torch.cuda.device_count()}")
     print(f"CUDA device name: {torch.cuda.get_device_name(0)}")
+    print(f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.2f} GB")
 else:
     print("WARNING: CUDA is not available. Training will use CPU, which will be much slower.")
 
 # The most aggressive memory management possible
 torch.cuda.empty_cache()
 gc.collect()  # Force garbage collection
-torch.cuda.set_per_process_memory_fraction(0.8)  # Increased to 80% to allow for larger model
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True,garbage_collection_threshold:0.5'
+torch.cuda.set_per_process_memory_fraction(0.9)  # Use up to 90% of available memory
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True,garbage_collection_threshold:0.6'
 
 # Disable gradient caching
 torch.backends.cudnn.benchmark = False
 torch.backends.cudnn.deterministic = True
+
+# Add memory-saving configuration
+torch.set_float32_matmul_precision('medium')  # Reduce precision for matrix multiplications
 
 root_dir = './'
 output_path = './output'
@@ -32,8 +36,8 @@ train_path = os.path.join(root_dir, 'train', 'images')
 valid_path = os.path.join(root_dir, 'valid', 'images')
 
 if __name__ == '__main__':
-    # Use a larger model for better accuracy (if memory allows)
-    model = YOLO('yolov8m.pt')  # Using medium-sized model for better accuracy
+    # Use the smallest model to save memory
+    model = YOLO('yolov8n.pt')  # Using nano model for memory efficiency
     
     # Set device
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
@@ -46,22 +50,22 @@ if __name__ == '__main__':
         device=device,
         data=yaml_dir,
         epochs=300,  # Increased epochs for better convergence
-        batch=16,  # Smaller batch size to accommodate larger model
+        batch=8,  # Drastically reduced batch size to save memory
         lr0=0.001,  # Higher initial learning rate
         lrf=0.01,  # Lower final LR factor for better fine-tuning
-        imgsz=640,  # Increased image size for better detection of small objects
-        plots=True,  # Enable plots to monitor training
-        cache=True,
+        imgsz=416,  # Reduced image size to save memory
+        plots=False,  # Disable plots to save memory
+        cache=False,  # Disable cache to reduce memory usage
         half=True,  # Keep half precision for efficiency
-        workers=2,  # Added some workers for faster data loading
+        workers=0,  # No additional workers to save memory
         close_mosaic=10,
         nbs=64,  # Nominal batch size for optimizer
         patience=50,  # Early stopping patience
         cos_lr=True,  # Use cosine LR scheduler
         weight_decay=0.0005,  # Add weight decay for regularization
         warmup_epochs=3,  # Add warmup epochs
-        mosaic=1.0,  # Enable mosaic augmentation
-        mixup=0.1,  # Add mixup augmentation
+        mosaic=0.5,  # Reduce mosaic augmentation
+        mixup=0.0,  # Disable mixup augmentation to save memory
         degrees=0.1,  # Rotation augmentation
         translate=0.1,  # Translation augmentation
         scale=0.5,  # Scaling augmentation
@@ -70,11 +74,11 @@ if __name__ == '__main__':
         hsv_h=0.015,  # HSV hue augmentation
         hsv_s=0.7,  # HSV saturation augmentation
         hsv_v=0.4,  # HSV value augmentation
-        copy_paste=0.1,  # Copy-paste augmentation
-        rect=False,  # Rectangular training with aspect ratios
+        copy_paste=0.0,  # Disable copy-paste augmentation to save memory
+        rect=True,  # Use rectangular training to optimize memory usage
         save=True,  # Save checkpoints
-        save_period=10,  # Save checkpoints every 10 epochs
-        optimizer='AdamW',  # Use AdamW optimizer
+        save_period=20,  # Save checkpoints less frequently
+        optimizer='SGD',  # Use memory-efficient SGD optimizer instead of AdamW
     )
 
     # Save best model

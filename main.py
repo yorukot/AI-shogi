@@ -18,6 +18,10 @@ def check():
     for img_name in image_files:
         img_path = os.path.join(test_path, img_name)
         img = cv2.imread(img_path)
+        img_width = img.shape[1]  # Get image width
+        left_threshold = img_width * 0.25  # Left 25% boundary
+        right_threshold = img_width * 0.75  # Right 25% boundary
+        
         results = model(img)
         region_counts = {'A': 0, 'B': 0, 'C': 0, 'D': 0}
         for result in results:
@@ -25,23 +29,42 @@ def check():
             labels = result.boxes.cls.cpu().numpy()
             for box, label in zip(boxes, labels):
                 x1, y1, x2, y2 = map(int, box)
+                center_x = (x1 + x2) / 2  # Calculate center x-coordinate of the bounding box
                 label = int(label)
-                if label == 0:
+                
+                # Check position for special C and D classifications
+                if center_x > right_threshold:  # Right 25% of the image
+                    region_counts['C'] += 1
+                    color = (0, 0, 255)  # Red color for type C
+                elif center_x < left_threshold:  # Left 25% of the image
+                    region_counts['D'] += 1
+                    color = (0, 255, 0)  # Green color for type D
+                elif label == 0:
                     region_counts['A'] += 1
-                    color = (255, 0, 0)
+                    color = (255, 0, 0)  # Blue color for type A
                 elif label == 1:
                     region_counts['B'] += 1
-                    color = (255, 255, 0)
+                    color = (255, 255, 0)  # Cyan color for type B
                 elif label == 2:
                     region_counts['C'] += 1
-                    color = (0, 0, 255)
+                    color = (0, 0, 255)  # Red color for type C
                 elif label == 3:
                     region_counts['D'] += 1
-                    color = (0, 255, 0)
+                    color = (0, 255, 0)  # Green color for type D
                 else:
                     continue
 
                 cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+                
+                # Add position label for pieces in the left or right 25%
+                if center_x > right_threshold:
+                    cv2.putText(img, 'C (Right)', (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                elif center_x < left_threshold:
+                    cv2.putText(img, 'D (Left)', (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+        # Draw the 25% threshold lines on the image
+        cv2.line(img, (int(left_threshold), 0), (int(left_threshold), img.shape[0]), (255, 255, 255), 1)
+        cv2.line(img, (int(right_threshold), 0), (int(right_threshold), img.shape[0]), (255, 255, 255), 1)
 
         for i, (region, count) in enumerate(region_counts.items()):
             cv2.putText(img, f'{region}: {count}', (10, 30 + i * 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
@@ -50,6 +73,7 @@ def check():
         cv2.imwrite(output_img_path, img)
 
     print("標示完成，結果已儲存至:", output_path)
+    return region_counts
 
 
 answers = check()
